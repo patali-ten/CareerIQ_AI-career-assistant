@@ -392,5 +392,82 @@
     "platform": "Coursera",
     "skill": "AI",
     "description": "IBM's 6-course certificate covering ML, deep learning, neural networks, and deploying AI models at scale."
+  },
+  {
+    "title": "Improving Communication Skills",
+    "url": "https://www.coursera.org/learn/wharton-communication-skills",
+    "platform": "Coursera",
+    "skill": "Communication Skills",
+    "description": "Learn professional written and verbal communication, active listening, and presentation techniques for workplace success."
+  },
+  {
+    "title": "Dynamic Public Speaking",
+    "url": "https://www.coursera.org/specializations/public-speaking",
+    "platform": "Coursera",
+    "skill": "Presentation Skills",
+    "description": "Build confidence in public speaking, slide design, and delivering compelling presentations."
+  },
+  {
+    "title": "Creative Thinking: Techniques and Tools",
+    "url": "https://www.coursera.org/learn/creative-thinking-techniques-and-tools-for-success",
+    "platform": "Coursera",
+    "skill": "Problem Solving",
+    "description": "Develop analytical thinking and creative problem-solving frameworks."
+  },
+  {
+    "title": "Data Analysis and Presentation Skills",
+    "url": "https://www.coursera.org/specializations/pwc-analytics",
+    "platform": "Coursera",
+    "skill": "Analytical Skills",
+    "description": "Build analytical thinking and data-driven decision making with real business cases."
+  },
+  {
+    "title": "Databricks Fundamentals",
+    "url": "https://www.databricks.com/learn/training/databricks-fundamentals",
+    "platform": "Databricks Academy",
+    "skill": "Databricks",
+    "description": "Learn Apache Spark, Delta Lake, and the Databricks Lakehouse platform for data engineering."
+  },
+  {
+    "title": "Azure Data Factory",
+    "url": "https://learn.microsoft.com/en-us/training/paths/data-integration-scale-azure-data-factory/",
+    "platform": "Microsoft Learn",
+    "skill": "Azure Data Factory",
+    "description": "Master Azure Data Factory for building ETL pipelines and data integration workflows in Azure."
+  },
+  {
+    "title": "Azure Synapse Analytics",
+    "url": "https://learn.microsoft.com/en-us/training/paths/realize-integrated-analytical-solutions-with-azure-synapse-analytics/",
+    "platform": "Microsoft Learn",
+    "skill": "Azure Synapse Analytics",
+    "description": "Learn Azure Synapse Analytics for big data analytics, SQL pools, and enterprise data warehousing."
+  },
+  {
+    "title": "Microsoft Fabric Analytics Engineer",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/fabric-analytics-engineer-associate/",
+    "platform": "Microsoft Learn",
+    "skill": "Microsoft Fabric",
+    "description": "Learn Microsoft Fabric for unified data analytics, lakehouses, and Power BI integration."
+  },
+  {
+    "title": "ETL and Data Pipelines with Shell Airflow and Kafka",
+    "url": "https://www.coursera.org/learn/etl-and-data-pipelines-shell-airflow-kafka",
+    "platform": "Coursera",
+    "skill": "ETL",
+    "description": "Hands-on ETL pipeline development using Apache Airflow, Kafka, and shell scripting."
+  },
+  {
+    "title": "Data Warehouse Concepts",
+    "url": "https://www.coursera.org/learn/dwdesign",
+    "platform": "Coursera",
+    "skill": "Data Modeling",
+    "description": "Learn data modeling, dimensional design, star and snowflake schemas for data warehouse solutions."
+  },
+  {
+    "title": "Google Cloud Big Data and ML Fundamentals",
+    "url": "https://www.coursera.org/learn/gcp-big-data-ml-fundamentals",
+    "platform": "Coursera",
+    "skill": "Cloud Data Management",
+    "description": "Understand cloud-based data management, big data processing pipelines, and ML on cloud infrastructure."
   }
 ]

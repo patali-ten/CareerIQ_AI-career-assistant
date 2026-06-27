@@ -16,3 +16,4 @@ pypdf2
 python-docx
 
 httpx
+rapidfuzz

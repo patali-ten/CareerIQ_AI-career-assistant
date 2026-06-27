@@ -7,7 +7,7 @@ def recommend_resources(gaps: list) -> list:
     enriched_gaps = []
     
     for gap in gaps:
-        resources = retrieve_resources(gap["skill"], k=3)
+        resources = retrieve_resources(gap["skill"], k=1)
         enriched_gaps.append({
             "skill": gap["skill"],
             "importance": gap["importance"],
