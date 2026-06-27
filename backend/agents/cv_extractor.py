@@ -11,7 +11,9 @@ llm = ChatGoogleGenerativeAI(
 def extract_cv_skills(cv_text: str) -> dict:
     prompt = f"""
     You are an expert HR analyst. Analyze this CV and extract structured information.
-    
+
+    IMPORTANT: Only extract skills that are EXPLICITLY written in the CV text. Do NOT infer or assume skills from project names, tools used, or context. For example, if the CV mentions Scikit-learn, extract Scikit-learn — also extract Machine Learning since it is explicitly listed under skills. But do NOT add Azure or Databricks just because the person worked on data projects.
+
     Return a valid JSON object with this exact structure:
     {{
         "skills": ["skill1", "skill2"],
@@ -19,7 +21,7 @@ def extract_cv_skills(cv_text: str) -> dict:
         "education": "Bachelor's in Computer Science",
         "job_titles": ["Data Analyst Intern", "Python Developer"]
     }}
-    
+
     CV TEXT:
     {cv_text}
     """
