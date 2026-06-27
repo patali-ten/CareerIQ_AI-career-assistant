@@ -15,7 +15,7 @@ def run_analysis(cv_text: str, jd_text: str) -> dict:
     jd_data = extract_jd_skills(jd_text)
     
     print("Step 3: Analyzing skill gaps...")
-    gap_analysis = analyze_gaps(cv_data, jd_data)
+    gap_analysis = analyze_gaps(cv_data, jd_data, cv_text)
     
     print("Step 4: Finding learning resources...")
     enriched_gaps = recommend_resources(gap_analysis["gaps"])
