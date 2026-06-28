@@ -34,7 +34,7 @@ export default function CVUploader({ onUpload, isLoading }) {
   return (
     <div className="w-full">
       <label className="text-sm font-medium mb-2 block" style={{ color: '#9CA3AF' }}>
-        Your CV
+        Your CV or Resume
       </label>
 
       <motion.div
@@ -56,7 +56,7 @@ export default function CVUploader({ onUpload, isLoading }) {
               <div className="p-3 rounded-full" style={{ background: '#1F2937' }}>
                 <Upload size={24} style={{ color: '#3B82F6' }} />
               </div>
-              <p style={{ color: '#F9FAFB' }} className="font-medium">Drop your CV here</p>
+              <p style={{ color: '#F9FAFB' }} className="font-medium">Drop your CV or Resume here</p>
               <p className="text-xs" style={{ color: '#6B7280' }}>PDF or DOCX — click to browse</p>
             </motion.div>
           )}
