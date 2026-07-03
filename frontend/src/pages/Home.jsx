@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight } from 'lucide-react'
 import CVUploader from '../components/upload/CVUploader'
 import JDInput from '../components/upload/JDInput'
 import LoadingSpinner from '../components/shared/LoadingSpinner'
-import { uploadCV, analyzeCareer } from '../services/api'
+import { uploadCV, analyzeCareer, saveSession } from '../services/api'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -42,7 +42,7 @@ export default function Home() {
       const result = await analyzeCareer(cvText, jdText)
       clearInterval(interval)
       setLoading(false)
-      // Navigate and safely hand off the backend result dictionary
+      saveSession(cvText, jdText)
       navigate('/results', { state: { result } })
     } catch (err) {
       clearInterval(interval)

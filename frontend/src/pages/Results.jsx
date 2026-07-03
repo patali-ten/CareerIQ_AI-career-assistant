@@ -1,15 +1,32 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Download } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, Mic, Loader2 } from 'lucide-react'
 import MatchScore from '../components/results/MatchScore'
 import SkillsGrid from '../components/results/SkillsGrid'
 import GapAnalysis from '../components/results/GapAnalysis'
 import RoadmapTimeline from '../components/results/RoadmapTimeline'
+import ResumeReview from '../components/results/ResumeReview'
+import CareerAdvice from '../components/results/CareerAdvice'
+import { getSession, crewAnalyze } from '../services/api'
+
+const TABS = [
+  { id: 'overview',        label: 'Overview' },
+  { id: 'resume-review',   label: 'Resume Review' },
+  { id: 'skill-gaps',      label: 'Skill Gaps' },
+  { id: 'learning-path',   label: 'Learning Path' },
+  { id: 'interview-coach', label: 'Interview Coach' },
+]
 
 export default function Results() {
   const { state } = useLocation()
   const navigate = useNavigate()
   const result = state?.result
+
+  const [activeTab, setActiveTab] = useState('overview')
+  const [crewData, setCrewData] = useState(null)
+  const [crewLoading, setCrewLoading] = useState(false)
+  const [crewError, setCrewError] = useState('')
 
   if (!result) {
     return (
@@ -20,59 +37,196 @@ export default function Results() {
     )
   }
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId)
+    const needsCrew = tabId === 'resume-review'
+    if (needsCrew && !crewData && !crewLoading) {
+      const { cvText, jobDescription } = getSession()
+      if (cvText && jobDescription) {
+        setCrewLoading(true)
+        setCrewError('')
+        crewAnalyze(cvText, jobDescription)
+          .then(data => { setCrewData(data); setCrewLoading(false) })
+          .catch(err => {
+            setCrewError('Deep analysis failed. ' + (err.response?.data?.detail || err.message))
+            setCrewLoading(false)
+          })
+      } else {
+        setCrewError('Session data missing — please run a new analysis.')
+      }
+    }
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-24">
-      
-      {/* Header */}
-      <motion.div className="flex items-center justify-between mb-10"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <button onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-white"
-          style={{ color: '#9CA3AF' }}>
-          <ArrowLeft size={16} /> New Analysis
-        </button>
-        <h1 className="text-2xl font-bold" style={{ fontFamily: 'Syne' }}>Your Career Analysis</h1>
-        <div />
-      </motion.div>
+    <div className="min-h-screen" style={{ background: '#0A0F1E' }}>
 
-      {/* Summary banner */}
-      <motion.div className="p-5 rounded-2xl mb-8 text-center"
-        style={{ background: 'linear-gradient(135deg, #3B82F620, #06B6D420)', border: '1px solid #3B82F640' }}
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <p style={{ color: '#D1D5DB' }}>{result.summary}</p>
-      </motion.div>
+      {/* Page header */}
+      <div className="max-w-4xl mx-auto px-4 pt-24 pb-4">
+        <motion.div className="flex items-center justify-between mb-6"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <button onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-sm transition-colors hover:text-white"
+            style={{ color: '#9CA3AF' }}>
+            <ArrowLeft size={16} /> New Analysis
+          </button>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: 'Syne' }}>Your Career Analysis</h1>
+          <div />
+        </motion.div>
 
-      {/* Score + Skills side by side on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-1">
-          <MatchScore score={result.match_score} />
-        </div>
-        <div className="lg:col-span-2">
-          <SkillsGrid matched={result.matched_skills} missing={result.missing_skills} />
+        {/* Summary banner */}
+        <motion.div className="p-5 rounded-2xl mb-0 text-center"
+          style={{ background: 'linear-gradient(135deg, #3B82F620, #06B6D420)', border: '1px solid #3B82F640' }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <p style={{ color: '#D1D5DB' }}>{result.summary}</p>
+        </motion.div>
+      </div>
+
+      {/* Sticky tab bar */}
+      <div className="sticky top-0 z-10 px-4 py-3"
+        style={{ background: '#0A0F1EE6', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1F2937' }}>
+        <div className="max-w-4xl mx-auto flex gap-1 overflow-x-auto">
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className="relative px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-lg"
+                style={{ color: isActive ? '#F9FAFB' : '#6B7280' }}>
+                {tab.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="tab-indicator"
+                    className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full"
+                    style={{ background: 'linear-gradient(90deg, #3B82F6, #06B6D4)' }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* Gap analysis */}
-      <motion.div className="mb-8"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-        <GapAnalysis gaps={result.skill_gaps} />
-      </motion.div>
+      {/* Tab content */}
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
+        <AnimatePresence mode="wait">
 
-      {/* Roadmap */}
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-        <RoadmapTimeline roadmap={result.roadmap} />
-      </motion.div>
+          {/* ── Overview ── */}
+          {activeTab === 'overview' && (
+            <motion.div key="overview"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="lg:col-span-1">
+                  <MatchScore score={result.match_score} />
+                </div>
+                <div className="lg:col-span-2">
+                  <SkillsGrid matched={result.matched_skills} missing={result.missing_skills} />
+                </div>
+              </div>
+              <div className="mt-8 text-center">
+                <button onClick={() => navigate('/')}
+                  className="px-8 py-3 rounded-xl font-semibold"
+                  style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)', color: 'white' }}>
+                  Analyze Another Job
+                </button>
+              </div>
+            </motion.div>
+          )}
 
-      {/* CTA */}
-      <motion.div className="mt-10 text-center"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-        <button onClick={() => navigate('/')}
-          className="px-8 py-3 rounded-xl font-semibold"
-          style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)', color: 'white' }}>
-          Analyze Another Job
-        </button>
-      </motion.div>
+          {/* ── Resume Review ── */}
+          {activeTab === 'resume-review' && (
+            <motion.div key="resume-review"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              {crewLoading && (
+                <div className="flex flex-col items-center gap-4 py-24">
+                  <Loader2 size={32} className="animate-spin" style={{ color: '#3B82F6' }} />
+                  <p className="text-sm" style={{ color: '#6B7280' }}>
+                    Running deep analysis with 6 AI agents… this takes 1-2 minutes.
+                  </p>
+                </div>
+              )}
+              {crewError && !crewLoading && (
+                <div className="text-center py-16">
+                  <p className="text-sm" style={{ color: '#EF4444' }}>{crewError}</p>
+                </div>
+              )}
+              {crewData && !crewLoading && (
+                <div className="flex flex-col gap-10">
+                  <div>
+                    <h2 className="text-xl font-bold mb-6" style={{ fontFamily: 'Syne' }}>Resume Review</h2>
+                    <ResumeReview data={crewData.resume_review} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold mb-6" style={{ fontFamily: 'Syne' }}>Career Strategy</h2>
+                    <CareerAdvice data={crewData.career_advice} />
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── Skill Gaps ── */}
+          {activeTab === 'skill-gaps' && (
+            <motion.div key="skill-gaps"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <GapAnalysis gaps={result.skill_gaps} />
+            </motion.div>
+          )}
+
+          {/* ── Learning Path ── */}
+          {activeTab === 'learning-path' && (
+            <motion.div key="learning-path"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <RoadmapTimeline roadmap={result.roadmap} />
+            </motion.div>
+          )}
+
+          {/* ── Interview Coach ── */}
+          {activeTab === 'interview-coach' && (
+            <motion.div key="interview-coach"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="flex flex-col items-center gap-6 py-12 text-center">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #3B82F620, #06B6D420)', border: '1px solid #3B82F640' }}>
+                <Mic size={32} style={{ color: '#3B82F6' }} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Syne' }}>
+                  Practice Your Interview
+                </h2>
+                <p className="text-sm max-w-md" style={{ color: '#9CA3AF' }}>
+                  Get 5 tailored interview questions based on this job description and your CV.
+                  The AI coach evaluates each answer and gives instant feedback.
+                </p>
+              </div>
+              <button onClick={() => navigate('/interview')}
+                className="px-8 py-3 rounded-xl font-semibold text-base"
+                style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)', color: 'white' }}>
+                Start Mock Interview →
+              </button>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </div>
+
+      {/* Floating Practice Interview button */}
+      <motion.button
+        onClick={() => navigate('/interview')}
+        className="fixed bottom-6 right-6 flex items-center gap-2 px-5 py-3 rounded-full font-semibold text-sm shadow-lg z-50"
+        style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)', color: 'white' }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.8, type: 'spring', stiffness: 300, damping: 20 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}>
+        {/* Pulse ring */}
+        <span className="absolute inset-0 rounded-full animate-ping opacity-30"
+          style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)' }} />
+        <Mic size={16} />
+        Practice Interview
+      </motion.button>
     </div>
   )
 }

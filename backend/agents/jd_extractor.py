@@ -10,6 +10,8 @@ def extract_jd_skills(jd_text: str) -> dict:
 
     IMPORTANT: Extract only skills and technologies EXPLICITLY mentioned in the job description text. Do not infer related skills. Extract the exact terms used — for example 'ETL/data pipeline concepts' should be extracted as 'ETL Concepts' and 'Data Pipelines'. 'Fluency in English' should be extracted as 'English Fluency'.
 
+    Extract only proper SKILL NAMES — technologies, tools, methodologies, domain knowledge, or certification names. Do NOT extract raw verbs (e.g. 'adapt', 'collaborate', 'manage'), generic adjectives, or single words that are not standalone skills. Each skill must be a recognizable, learnable competency.
+
     Return ONLY a valid JSON object with this exact structure:
     {{
         "required_skills": ["skill1", "skill2"],

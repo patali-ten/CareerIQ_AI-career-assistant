@@ -5,6 +5,20 @@ const api = axios.create({
   timeout: 90000, // 90 seconds - AI chains can take slightly longer under load
 })
 
+// ── Session storage helpers ──────────────────────────────────────────────────
+
+export const saveSession = (cvText, jobDescription) => {
+  sessionStorage.setItem('cv_text', cvText)
+  sessionStorage.setItem('job_description', jobDescription)
+}
+
+export const getSession = () => ({
+  cvText: sessionStorage.getItem('cv_text') || '',
+  jobDescription: sessionStorage.getItem('job_description') || '',
+})
+
+// ── Existing endpoints ────────────────────────────────────────────────────────
+
 export const uploadCV = async (file) => {
   try {
     const formData = new FormData()
@@ -25,9 +39,7 @@ export const analyzeCareer = async (cvText, jobDescription) => {
       cv_text: cvText,
       job_description: jobDescription
     }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: { 'Content-Type': 'application/json' }
     })
     return response.data
   } catch (error) {
@@ -36,6 +48,58 @@ export const analyzeCareer = async (cvText, jobDescription) => {
       data: error.response?.data,
       message: error.message
     })
+    throw error
+  }
+}
+
+// ── Crew endpoints ────────────────────────────────────────────────────────────
+
+export const crewAnalyze = async (cvText, jobDescription) => {
+  try {
+    const response = await api.post('/crew-analyze', {
+      cv_text: cvText,
+      job_description: jobDescription
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 300000, // 5 minutes — 6 sequential agents can take a while
+    })
+    return response.data
+  } catch (error) {
+    console.error("Crew analysis error:", error.response?.data || error.message)
+    throw error
+  }
+}
+
+// ── Interview endpoints ───────────────────────────────────────────────────────
+
+export const startInterview = async (cvText, jobDescription) => {
+  try {
+    const response = await api.post('/interview/start', {
+      cv_text: cvText,
+      job_description: jobDescription
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    return response.data
+  } catch (error) {
+    console.error("Interview start error:", error.response?.data || error.message)
+    throw error
+  }
+}
+
+export const submitAnswer = async (sessionId, question, answer, jobDescription) => {
+  try {
+    const response = await api.post('/interview/answer', {
+      session_id: sessionId,
+      question,
+      answer,
+      job_description: jobDescription
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    return response.data
+  } catch (error) {
+    console.error("Interview answer error:", error.response?.data || error.message)
     throw error
   }
 }
