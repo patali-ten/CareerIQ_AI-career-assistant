@@ -8,7 +8,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
 
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 # FIX: Change text-embedding-004 to gemini-embedding-001
 EMBEDDING_MODEL = "gemini-embedding-001"

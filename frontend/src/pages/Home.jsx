@@ -7,6 +7,31 @@ import JDInput from '../components/upload/JDInput'
 import LoadingSpinner from '../components/shared/LoadingSpinner'
 import { uploadCV, analyzeCareer, saveSession } from '../services/api'
 
+// /crew-analyze returns { resume_review, skill_gaps, job_match, career_advice,
+// learning_path, interview_prep } — reshape it into the flat result shape
+// (match_score, matched_skills, missing_skills, skill_gaps, roadmap, summary)
+// that the Results page's Overview/Skill Gaps/Learning Path tabs expect.
+function mapCrewResult(raw) {
+  const skillGaps = raw.skill_gaps || {}
+  const jobMatch = raw.job_match || {}
+  const learningPath = raw.learning_path || {}
+
+  return {
+    match_score: skillGaps.match_score ?? jobMatch.match_score ?? 0,
+    matched_skills: skillGaps.matched_skills || [],
+    missing_skills: skillGaps.missing_skills || [],
+    skill_gaps: (skillGaps.skill_gaps || []).map(gap => ({
+      skill: gap.skill,
+      importance: gap.importance,
+      resources: gap.resources || [],
+    })),
+    roadmap: (learningPath.roadmap || []).map(step =>
+      typeof step === 'string' ? step : `${step.week}: ${step.focus} — ${step.action}`
+    ),
+    summary: jobMatch.summary || '',
+  }
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const [cvText, setCvText] = useState('')
@@ -39,11 +64,12 @@ export default function Home() {
     }, 3500)
 
     try {
-      const result = await analyzeCareer(cvText, jdText)
+      const raw = await analyzeCareer(cvText, jdText)
+      const result = mapCrewResult(raw)
       clearInterval(interval)
       setLoading(false)
       saveSession(cvText, jdText)
-      navigate('/results', { state: { result } })
+      navigate('/results', { state: { result, crewData: raw } })
     } catch (err) {
       clearInterval(interval)
       setLoading(false)

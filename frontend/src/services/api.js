@@ -35,11 +35,12 @@ export const uploadCV = async (file) => {
 
 export const analyzeCareer = async (cvText, jobDescription) => {
   try {
-    const response = await api.post('/analyze', {
+    const response = await api.post('/crew-analyze', {
       cv_text: cvText,
       job_description: jobDescription
     }, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 300000, // 5 minutes — 6 sequential CrewAI agents can take a while
     })
     return response.data
   } catch (error) {

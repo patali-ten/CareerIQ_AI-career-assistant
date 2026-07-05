@@ -3,12 +3,10 @@ import re
 import uuid
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from langchain_google_genai import ChatGoogleGenerativeAI
-from backend.config import GEMINI_API_KEY, GEMINI_MODEL
+from crewai import Crew, Process, Task
+from backend.agents.crew.agents import create_agents
 
 router = APIRouter()
-
-llm = ChatGoogleGenerativeAI(model=GEMINI_MODEL, google_api_key=GEMINI_API_KEY, temperature=0.7)
 
 _sessions: dict = {}
 
@@ -72,8 +70,19 @@ Return ONLY valid JSON with this exact structure:
   ]
 }}"""
 
-        response = llm.invoke(prompt)
-        data = _parse_json(response.content)
+        agents = create_agents()
+        interview_coach = agents["interview_coach"]
+        task = Task(
+            description=prompt,
+            expected_output='A JSON object with key: questions, a list of exactly 5 interview '
+                             'question strings. Return ONLY the JSON object, no extra commentary.',
+            agent=interview_coach,
+        )
+        crew = Crew(agents=[interview_coach], tasks=[task], process=Process.sequential, verbose=True)
+        result = await crew.kickoff_async()
+
+        raw = result.raw if hasattr(result, "raw") else str(result)
+        data = _parse_json(raw)
         questions = data.get("questions", [])
 
         if not questions:
@@ -123,8 +132,20 @@ Return ONLY valid JSON with this exact structure:
   ]
 }}"""
 
-        response = llm.invoke(prompt)
-        result = _parse_json(response.content)
+        agents = create_agents()
+        interview_coach = agents["interview_coach"]
+        task = Task(
+            description=prompt,
+            expected_output='A JSON object with keys: feedback (a 2-3 sentence string), score '
+                             '(a string like "3/5"), tips (a list of specific improvement tip '
+                             'strings). Return ONLY the JSON object, no extra commentary.',
+            agent=interview_coach,
+        )
+        crew = Crew(agents=[interview_coach], tasks=[task], process=Process.sequential, verbose=True)
+        crew_result = await crew.kickoff_async()
+
+        raw = crew_result.raw if hasattr(crew_result, "raw") else str(crew_result)
+        result = _parse_json(raw)
 
         current_index = session["current_index"] + 1
         session["current_index"] = current_index

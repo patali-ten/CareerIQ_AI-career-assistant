@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Mic, Loader2 } from 'lucide-react'
+import { ArrowLeft, Mic } from 'lucide-react'
 import MatchScore from '../components/results/MatchScore'
 import SkillsGrid from '../components/results/SkillsGrid'
 import GapAnalysis from '../components/results/GapAnalysis'
 import RoadmapTimeline from '../components/results/RoadmapTimeline'
 import ResumeReview from '../components/results/ResumeReview'
 import CareerAdvice from '../components/results/CareerAdvice'
-import { getSession, crewAnalyze } from '../services/api'
 
 const TABS = [
   { id: 'overview',        label: 'Overview' },
@@ -22,11 +21,9 @@ export default function Results() {
   const { state } = useLocation()
   const navigate = useNavigate()
   const result = state?.result
+  const crewData = state?.crewData
 
   const [activeTab, setActiveTab] = useState('overview')
-  const [crewData, setCrewData] = useState(null)
-  const [crewLoading, setCrewLoading] = useState(false)
-  const [crewError, setCrewError] = useState('')
 
   if (!result) {
     return (
@@ -35,26 +32,6 @@ export default function Results() {
         <button onClick={() => navigate('/')} style={{ color: '#3B82F6' }}>← Go back</button>
       </div>
     )
-  }
-
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId)
-    const needsCrew = tabId === 'resume-review'
-    if (needsCrew && !crewData && !crewLoading) {
-      const { cvText, jobDescription } = getSession()
-      if (cvText && jobDescription) {
-        setCrewLoading(true)
-        setCrewError('')
-        crewAnalyze(cvText, jobDescription)
-          .then(data => { setCrewData(data); setCrewLoading(false) })
-          .catch(err => {
-            setCrewError('Deep analysis failed. ' + (err.response?.data?.detail || err.message))
-            setCrewLoading(false)
-          })
-      } else {
-        setCrewError('Session data missing — please run a new analysis.')
-      }
-    }
   }
 
   return (
@@ -90,7 +67,7 @@ export default function Results() {
             return (
               <button
                 key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
+                onClick={() => setActiveTab(tab.id)}
                 className="relative px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-lg"
                 style={{ color: isActive ? '#F9FAFB' : '#6B7280' }}>
                 {tab.label}
@@ -138,20 +115,14 @@ export default function Results() {
           {activeTab === 'resume-review' && (
             <motion.div key="resume-review"
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              {crewLoading && (
-                <div className="flex flex-col items-center gap-4 py-24">
-                  <Loader2 size={32} className="animate-spin" style={{ color: '#3B82F6' }} />
-                  <p className="text-sm" style={{ color: '#6B7280' }}>
-                    Running deep analysis with 6 AI agents… this takes 1-2 minutes.
+              {!crewData && (
+                <div className="text-center py-16">
+                  <p className="text-sm" style={{ color: '#EF4444' }}>
+                    Deep analysis data not available. Please run a new analysis.
                   </p>
                 </div>
               )}
-              {crewError && !crewLoading && (
-                <div className="text-center py-16">
-                  <p className="text-sm" style={{ color: '#EF4444' }}>{crewError}</p>
-                </div>
-              )}
-              {crewData && !crewLoading && (
+              {crewData && (
                 <div className="flex flex-col gap-10">
                   <div>
                     <h2 className="text-xl font-bold mb-6" style={{ fontFamily: 'Syne' }}>Resume Review</h2>

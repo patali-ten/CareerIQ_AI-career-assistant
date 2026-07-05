@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import APIRouter, HTTPException
 from backend.models.request_models import AnalyzeRequest
 from backend.agents.crew.crew import CareerCrew
+from backend.rag.retriever import retrieve_resources
 
 router = APIRouter()
 executor = ThreadPoolExecutor()
@@ -19,6 +20,10 @@ async def crew_analyze(request: AnalyzeRequest):
             executor,
             lambda: CareerCrew().run(request.cv_text, request.job_description)
         )
+
+        for gap in result.get("skill_gaps", {}).get("skill_gaps", []):
+            gap["resources"] = retrieve_resources(gap["skill"], k=1)
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
