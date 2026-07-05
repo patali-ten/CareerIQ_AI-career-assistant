@@ -100,7 +100,7 @@ export default function Home() {
         </div>
 
         <h1 className="text-5xl md:text-6xl font-extrabold mb-4 leading-tight"
-          style={{ fontFamily: 'Syne', background: 'linear-gradient(135deg, #F9FAFB, #3B82F6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          style={{fontFamily: 'Arial', background: 'linear-gradient(135deg, #F9FAFB, #3B82F6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Know Your Gap.<br />Close It Fast.
         </h1>
 

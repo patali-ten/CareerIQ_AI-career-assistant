@@ -71,15 +71,10 @@ function SummaryCard({ totalQuestions }) {
         You answered all {totalQuestions} questions. Review the feedback above to prepare for your real interview.
       </p>
       <div className="flex gap-3 justify-center">
-        <button onClick={() => navigate('/results')}
+        <button onClick={() => navigate('/')}
           className="px-6 py-2.5 rounded-xl text-sm font-semibold"
           style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)', color: 'white' }}>
-          Back to Results
-        </button>
-        <button onClick={() => window.location.reload()}
-          className="px-6 py-2.5 rounded-xl text-sm font-semibold"
-          style={{ background: '#1F2937', color: '#9CA3AF' }}>
-          Retry
+          Start New Analysis
         </button>
       </div>
     </motion.div>
@@ -226,7 +221,7 @@ export default function InterviewCoach() {
             )}
           </div>
         </div>
-        <button onClick={() => navigate('/results')}
+        <button onClick={() => navigate('/')}
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
           style={{ color: '#9CA3AF', background: '#1F2937' }}>
           <X size={12} /> Exit Interview
