@@ -66,7 +66,7 @@ App runs at `http://localhost:5173`
 
 ## Roadmap
 
-- [ ] Multi-agent layer with CrewAI (future improvements)
+- [ ] Multi-agent layer with CrewAI 
   - Career Advisor Agent
   - Resume Reviewer Agent
   - Skill Gap Analyzer Agent
