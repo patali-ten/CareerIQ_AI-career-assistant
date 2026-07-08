@@ -1,3 +1,5 @@
+import { useSpeechToText, useTextToSpeech } from '../hooks/useVoice'
+import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -28,7 +30,8 @@ function ChatBubble({ message, side }) {
   )
 }
 
-function FeedbackBubble({ feedback, score, tips }) {
+// FeedbackBubble now receives speak/stop/speaking from parent
+function FeedbackBubble({ feedback, score, tips, onSpeak, onStop, speaking }) {
   const [num] = score.split('/')
   const scoreVal = parseInt(num, 10) || 0
   const scoreColor = scoreVal >= 4 ? '#10B981' : scoreVal >= 3 ? '#F59E0B' : '#EF4444'
@@ -41,7 +44,9 @@ function FeedbackBubble({ feedback, score, tips }) {
           Score: {score}
         </span>
       </div>
+
       <p className="text-sm leading-relaxed" style={{ color: '#D1D5DB' }}>{feedback}</p>
+
       {tips.length > 0 && (
         <ul className="flex flex-col gap-2 mt-1">
           {tips.map((tip, i) => (
@@ -52,6 +57,28 @@ function FeedbackBubble({ feedback, score, tips }) {
           ))}
         </ul>
       )}
+
+      {/* Voice controls */}
+      <div className="flex items-center gap-2 mt-1 pt-3" style={{ borderTop: '1px solid #1F2937' }}>
+        {speaking ? (
+          <button
+            onClick={onStop}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
+            style={{ background: '#EF444420', color: '#EF4444', border: '1px solid #EF444440' }}>
+            <VolumeX size={12} /> Stop voice
+          </button>
+        ) : (
+          <button
+            onClick={onSpeak}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
+            style={{ background: '#3B82F620', color: '#3B82F6', border: '1px solid #3B82F640' }}>
+            <Volume2 size={12} /> Play again
+          </button>
+        )}
+        <span className="text-xs" style={{ color: '#4B5563' }}>
+          {speaking ? 'Reading feedback aloud...' : 'Voice finished'}
+        </span>
+      </div>
     </div>
   )
 }
@@ -90,16 +117,29 @@ export default function InterviewCoach() {
   const [messages, setMessages] = useState([])
   const [currentQ, setCurrentQ] = useState(0)
   const [answer, setAnswer] = useState('')
+
+  // Voice hooks
+  const { listening, startListening, stopListening } = useSpeechToText(
+    (transcript) => setAnswer(transcript)
+  )
+  const { speaking, speak, stop } = useTextToSpeech()
+
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
 
+  // Track which feedback message is currently being spoken
+  // so only that bubble shows "Stop voice" / "Play again" correctly
+  const [speakingMsgId, setSpeakingMsgId] = useState(null)
+
   const bottomRef = useRef(null)
   const hasStartedRef = useRef(false)
 
   const addMessage = (content, side) => {
-    setMessages(prev => [...prev, { content, side, id: Date.now() + Math.random() }])
+    const id = Date.now() + Math.random()
+    setMessages(prev => [...prev, { content, side, id }])
+    return id
   }
 
   useEffect(() => {
@@ -109,8 +149,6 @@ export default function InterviewCoach() {
       return
     }
 
-    // Guard against React StrictMode's dev-only double effect invocation,
-    // which would otherwise start two sessions and duplicate the welcome/Q1 bubbles.
     if (hasStartedRef.current) return
     hasStartedRef.current = true
 
@@ -122,12 +160,15 @@ export default function InterviewCoach() {
           <p className="text-sm leading-relaxed" style={{ color: '#D1D5DB' }}>
             <span className="font-semibold" style={{ color: '#3B82F6' }}>Interview Coach: </span>
             Welcome! I've prepared {qs.length} questions tailored to this role. Take your time with each answer.
+            You can <span style={{ color: '#3B82F6' }}>speak your answer</span> using the mic button, or type it.
           </p>,
           'left'
         )
         addMessage(
           <div className="flex flex-col gap-1">
-            <p className="text-xs uppercase tracking-wider mb-1" style={{ color: '#6B7280' }}>Question 1 of {qs.length}</p>
+            <p className="text-xs uppercase tracking-wider mb-1" style={{ color: '#6B7280' }}>
+              Question 1 of {qs.length}
+            </p>
             <p className="text-sm leading-relaxed font-medium" style={{ color: '#F9FAFB' }}>{qs[0]}</p>
           </div>,
           'left'
@@ -144,8 +185,21 @@ export default function InterviewCoach() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const handleSpeak = (text, msgId) => {
+    setSpeakingMsgId(msgId)
+    speak(text)
+  }
+
+  const handleStop = () => {
+    stop()
+    setSpeakingMsgId(null)
+  }
+
   const handleSubmit = async () => {
     if (!answer.trim() || submitting) return
+
+    // Stop mic if still listening when user submits
+    if (listening) stopListening()
 
     const question = questions[currentQ]
     const userAnswer = answer.trim()
@@ -159,10 +213,22 @@ export default function InterviewCoach() {
     setSubmitting(true)
     try {
       const result = await submitAnswer(sessionId, question, userAnswer, jobDescription)
-      addMessage(
-        <FeedbackBubble feedback={result.feedback} score={result.score} tips={result.tips} />,
-        'left'
-      )
+
+      // Add feedback bubble — store the msgId so voice controls work per-bubble
+      const feedbackMsgId = Date.now() + Math.random()
+      const feedbackText = result.feedback
+
+      setMessages(prev => [...prev, {
+        id: feedbackMsgId,
+        side: 'left',
+        content: null, // will be rendered separately below
+        isFeedback: true,
+        feedbackData: { feedback: feedbackText, score: result.score, tips: result.tips },
+      }])
+
+      // Auto-play feedback voice
+      setSpeakingMsgId(feedbackMsgId)
+      speak(feedbackText)
 
       const nextIndex = currentQ + 1
       if (result.next_question) {
@@ -221,7 +287,7 @@ export default function InterviewCoach() {
             )}
           </div>
         </div>
-        <button onClick={() => navigate('/')}
+        <button onClick={() => { stop(); navigate('/') }}
           className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
           style={{ color: '#9CA3AF', background: '#1F2937' }}>
           <X size={12} /> Exit Interview
@@ -242,15 +308,38 @@ export default function InterviewCoach() {
           {error && (
             <div className="text-center py-20">
               <p className="text-sm mb-4" style={{ color: '#EF4444' }}>{error}</p>
-              <button onClick={() => navigate('/')}
-                className="text-sm" style={{ color: '#3B82F6' }}>← Go back home</button>
+              <button onClick={() => navigate('/')} className="text-sm" style={{ color: '#3B82F6' }}>
+                ← Go back home
+              </button>
             </div>
           )}
 
           <AnimatePresence>
-            {messages.map(msg => (
-              <ChatBubble key={msg.id} message={msg.content} side={msg.side} />
-            ))}
+            {messages.map(msg => {
+              // Feedback messages render with voice controls
+              if (msg.isFeedback) {
+                const isThisSpeaking = speakingMsgId === msg.id && speaking
+                return (
+                  <motion.div key={msg.id} className="flex justify-start mb-4"
+                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}>
+                    <div className="max-w-[80%] rounded-2xl px-5 py-4"
+                      style={{ background: '#111827', border: '1px solid #1F2937', borderBottomLeftRadius: 4 }}>
+                      <FeedbackBubble
+                        feedback={msg.feedbackData.feedback}
+                        score={msg.feedbackData.score}
+                        tips={msg.feedbackData.tips}
+                        speaking={isThisSpeaking}
+                        onSpeak={() => handleSpeak(msg.feedbackData.feedback, msg.id)}
+                        onStop={handleStop}
+                      />
+                    </div>
+                  </motion.div>
+                )
+              }
+              // Regular messages
+              return <ChatBubble key={msg.id} message={msg.content} side={msg.side} />
+            })}
           </AnimatePresence>
 
           {done && <SummaryCard totalQuestions={questions.length} />}
@@ -263,41 +352,79 @@ export default function InterviewCoach() {
       {!loading && !error && !done && (
         <div className="px-4 py-4 md:px-8 shrink-0"
           style={{ borderTop: '1px solid #1F2937', background: '#0D1117' }}>
-          <div className="max-w-2xl mx-auto flex gap-3">
-            <textarea
-              value={answer}
-              onChange={e => setAnswer(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={3}
-              placeholder="Type your answer here… (Ctrl+Enter to submit)"
-              className="flex-1 resize-none rounded-xl px-4 py-3 text-sm outline-none transition-colors"
-              style={{
-                background: '#111827',
-                border: '1px solid #1F2937',
-                color: '#F9FAFB',
-                lineHeight: '1.6',
-              }}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!answer.trim() || submitting}
-              className="px-4 rounded-xl flex items-center justify-center transition-all"
-              style={{
-                background: answer.trim() && !submitting
-                  ? 'linear-gradient(135deg, #3B82F6, #06B6D4)'
-                  : '#1F2937',
-                color: answer.trim() && !submitting ? 'white' : '#4B5563',
-                cursor: answer.trim() && !submitting ? 'pointer' : 'not-allowed',
-                minWidth: 48,
-              }}>
-              {submitting
-                ? <Loader2 size={18} className="animate-spin" />
-                : <Send size={18} />}
-            </button>
+          <div className="max-w-2xl mx-auto flex flex-col gap-2">
+
+            {/* Textarea with mic button inside */}
+            <div className="relative flex gap-3">
+              <div className="relative flex-1">
+                <textarea
+                  value={answer}
+                  onChange={e => setAnswer(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={3}
+                  placeholder={listening
+                    ? '🎤 Listening… speak your answer'
+                    : 'Type your answer or click the mic to speak… (Ctrl+Enter to submit)'}
+                  className="w-full resize-none rounded-xl px-4 py-3 pr-12 text-sm outline-none"
+                  style={{
+                    background: '#111827',
+                    border: `2px solid ${listening ? '#EF4444' : '#1F2937'}`,
+                    color: '#F9FAFB',
+                    lineHeight: '1.6',
+                    transition: 'border-color 0.2s',
+                  }}
+                />
+
+                {/* Mic button inside textarea */}
+                <button
+                  onClick={listening ? stopListening : startListening}
+                  className="absolute bottom-3 right-3 p-2 rounded-lg transition-all"
+                  style={{
+                    background: listening ? '#EF444420' : '#1F2937',
+                    border: `1px solid ${listening ? '#EF4444' : '#374151'}`,
+                  }}
+                  title={listening ? 'Stop recording' : 'Speak your answer'}>
+                  {listening
+                    ? <MicOff size={15} style={{ color: '#EF4444' }} />
+                    : <Mic size={15} style={{ color: '#3B82F6' }} />}
+                </button>
+              </div>
+
+              {/* Submit button */}
+              <button
+                onClick={handleSubmit}
+                disabled={!answer.trim() || submitting}
+                className="px-4 rounded-xl flex items-center justify-center transition-all self-stretch"
+                style={{
+                  background: answer.trim() && !submitting
+                    ? 'linear-gradient(135deg, #3B82F6, #06B6D4)'
+                    : '#1F2937',
+                  color: answer.trim() && !submitting ? 'white' : '#4B5563',
+                  cursor: answer.trim() && !submitting ? 'pointer' : 'not-allowed',
+                  minWidth: 48,
+                }}>
+                {submitting
+                  ? <Loader2 size={18} className="animate-spin" />
+                  : <Send size={18} />}
+              </button>
+            </div>
+
+            {/* Recording indicator */}
+            {listening && (
+              <motion.div
+                className="flex items-center gap-2"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-xs" style={{ color: '#EF4444' }}>
+                  Recording… click mic again to stop
+                </span>
+              </motion.div>
+            )}
+
+            <p className="text-center text-xs" style={{ color: '#374151' }}>
+              Ctrl+Enter to submit • Your answers are not stored
+            </p>
           </div>
-          <p className="text-center text-xs mt-2" style={{ color: '#374151' }}>
-            Ctrl+Enter to submit • Your answers are not stored
-          </p>
         </div>
       )}
     </div>
