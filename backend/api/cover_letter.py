@@ -25,6 +25,7 @@ async def generate_cover_letter_endpoint(request: CoverLetterRequest):
         pdf_bytes = generate_cover_letter_pdf(
             cover_letter_text=result["cover_letter"],
             applicant_name=result.get("applicant_name", "Applicant"),
+            cv_text=request.cv_text,
         )
         return Response(
             content=pdf_bytes,

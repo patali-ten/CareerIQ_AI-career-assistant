@@ -1,3 +1,4 @@
+/* Home.jsx */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -5,12 +6,9 @@ import { Sparkles, ArrowRight } from 'lucide-react'
 import CVUploader from '../components/upload/CVUploader'
 import JDInput from '../components/upload/JDInput'
 import LoadingSpinner from '../components/shared/LoadingSpinner'
+import AnimatedBackground from '../components/shared/AnimatedBackground'
 import { uploadCV, analyzeCareer, saveSession } from '../services/api'
 
-// /crew-analyze returns { resume_review, skill_gaps, job_match, career_advice,
-// learning_path, interview_prep } — reshape it into the flat result shape
-// (match_score, matched_skills, missing_skills, skill_gaps, roadmap, summary)
-// that the Results page's Overview/Skill Gaps/Learning Path tabs expect.
 function mapCrewResult(raw) {
   const skillGaps = raw.skill_gaps || {}
   const jobMatch = raw.job_match || {}
@@ -53,12 +51,11 @@ export default function Home() {
   const handleAnalyze = async () => {
     if (!cvText) { setError('Please upload your CV first.'); return }
     if (jdText.trim().split(/\s+/).length < 20) { setError('Please add a more detailed job description.'); return }
-    
+
     setError('')
     setLoading(true)
     setStep(0)
 
-    // Simulate step progression smooth UI shifts matching backend console logs
     const interval = setInterval(() => {
       setStep(s => Math.min(s + 1, 4))
     }, 3500)
@@ -69,12 +66,12 @@ export default function Home() {
       clearInterval(interval)
       setLoading(false)
       saveSession(cvText, jdText)
-      navigate('/results', { state: { result, crewData: raw } })
+      navigate('/results', { state: { result, crewData: raw, cvText, jobDescription: jdText } })
     } catch (err) {
       clearInterval(interval)
       setLoading(false)
       setStep(0)
-      
+
       const serverDetail = err.response?.data?.detail
       if (serverDetail) {
         setError(`Analysis Error: ${typeof serverDetail === 'string' ? serverDetail : JSON.stringify(serverDetail)}`)
@@ -88,11 +85,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-24">
-      
+
+      {/* Particle background */}
+      <AnimatedBackground />
+
       {/* Hero */}
-      <motion.div className="text-center mb-12"
+      <motion.div className="text-center mb-12 relative z-10"
         initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        
+
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-6"
           style={{ background: '#3B82F620', border: '1px solid #3B82F640', color: '#3B82F6' }}>
           <Sparkles size={12} />
@@ -100,7 +100,7 @@ export default function Home() {
         </div>
 
         <h1 className="text-5xl md:text-6xl font-extrabold mb-4 leading-tight"
-          style={{fontFamily: 'Arial', background: 'linear-gradient(135deg, #F9FAFB, #3B82F6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          style={{ fontFamily: 'Arial', background: 'linear-gradient(135deg, #F9FAFB, #3B82F6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Know Your Gap.<br />Close It Fast.
         </h1>
 
@@ -110,10 +110,10 @@ export default function Home() {
       </motion.div>
 
       {/* Input card */}
-      <motion.div className="w-full max-w-2xl rounded-3xl p-8 flex flex-col gap-6"
+      <motion.div className="w-full max-w-2xl rounded-3xl p-8 flex flex-col gap-6 relative z-10"
         style={{ background: '#111827', border: '1px solid #1F2937' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        
+
         <CVUploader onUpload={handleCVUpload} />
         <JDInput value={jdText} onChange={setJdText} />
 

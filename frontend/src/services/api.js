@@ -53,6 +53,23 @@ export const analyzeCareer = async (cvText, jobDescription) => {
   }
 }
 
+export const generateCoverLetter = async (cvText, jobDescription) => {
+  const response = await fetch("http://localhost:8000/generate-cover-letter", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cv_text: cvText, job_description: jobDescription }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to generate cover letter");
+  }
+
+  // Returns a PDF blob
+  const blob = await response.blob();
+  return blob;
+};
+
 // ── Crew endpoints ────────────────────────────────────────────────────────────
 
 export const crewAnalyze = async (cvText, jobDescription) => {

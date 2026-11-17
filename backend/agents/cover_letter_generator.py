@@ -1,4 +1,5 @@
 import json
+from urllib import response
 from langchain_google_genai import ChatGoogleGenerativeAI
 from backend.config import GEMINI_API_KEY, GEMINI_MODEL
 
@@ -41,7 +42,15 @@ JOB DESCRIPTION:
 """
 
     response = llm.invoke(prompt)
-    raw = response.content.strip()
+
+    # Gemini sometimes returns content as a list of parts instead of a string
+    if isinstance(response.content, list):
+     raw = "".join(
+        part.get("text", "") if isinstance(part, dict) else str(part)
+        for part in response.content
+    ).strip()
+    else:
+     raw = response.content.strip()
 
     # Strip markdown code fences if present
     if raw.startswith("```"):

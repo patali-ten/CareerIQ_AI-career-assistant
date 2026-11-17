@@ -1,3 +1,4 @@
+/* InterviewCoach.jsx */
 import { useSpeechToText, useTextToSpeech } from '../hooks/useVoice'
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
@@ -5,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Star, ChevronRight, Loader2 } from 'lucide-react'
 import { getSession, startInterview, submitAnswer } from '../services/api'
+import VoiceWaveform from '../components/shared/VoiceWaveform'
 
 const BUBBLE_AGENT = { side: 'left', color: '#3B82F6' }
 const BUBBLE_USER = { side: 'right', color: '#1F2937' }
@@ -410,16 +412,16 @@ export default function InterviewCoach() {
             </div>
 
             {/* Recording indicator */}
-            {listening && (
-              <motion.div
-                className="flex items-center gap-2"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs" style={{ color: '#EF4444' }}>
-                  Recording… click mic again to stop
-                </span>
-              </motion.div>
-            )}
+          {listening && (
+            <motion.div
+             className="flex items-center gap-3"
+             initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <VoiceWaveform isRecording={listening} />
+            <span className="text-xs" style={{ color: '#EF4444' }}>
+              Recording… click mic again to stop
+            </span>
+            </motion.div>
+          )}
 
             <p className="text-center text-xs" style={{ color: '#374151' }}>
               Ctrl+Enter to submit • Your answers are not stored

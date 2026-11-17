@@ -1,13 +1,15 @@
+/* Results.jsx */
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Mic } from 'lucide-react'
+import { ArrowLeft, Mic, FileText } from 'lucide-react'
 import MatchScore from '../components/results/MatchScore'
 import SkillsGrid from '../components/results/SkillsGrid'
 import GapAnalysis from '../components/results/GapAnalysis'
 import RoadmapTimeline from '../components/results/RoadmapTimeline'
 import ResumeReview from '../components/results/ResumeReview'
 import CareerAdvice from '../components/results/CareerAdvice'
+import CoverLetterButton from '../components/results/CoverLetterButton'
 
 const TABS = [
   { id: 'overview',        label: 'Overview' },
@@ -22,6 +24,8 @@ export default function Results() {
   const navigate = useNavigate()
   const result = state?.result
   const crewData = state?.crewData
+  const cvText = state?.cvText || ''
+  const jobDescription = state?.jobDescription || ''
 
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -58,7 +62,7 @@ export default function Results() {
         </motion.div>
       </div>
 
-      {/* Sticky tab bar */}
+      {/* Sticky tab bar — sliding indicator */}
       <div className="sticky top-0 z-10 px-4 py-3"
         style={{ background: '#0A0F1EE6', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1F2937' }}>
         <div className="max-w-4xl mx-auto flex gap-1 overflow-x-auto">
@@ -101,6 +105,25 @@ export default function Results() {
                   <SkillsGrid matched={result.matched_skills} missing={result.missing_skills} />
                 </div>
               </div>
+
+              {/* Cover Letter section */}
+              <div className="mt-6 p-6 rounded-2xl"
+                style={{ background: '#111827', border: '1px solid #1F2937' }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: '#3B82F620' }}>
+                    <FileText size={16} style={{ color: '#3B82F6' }} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm" style={{ color: '#F9FAFB' }}>Cover Letter</h3>
+                    <p className="text-xs" style={{ color: '#6B7280' }}>
+                      AI-generated cover letter tailored to this job description
+                    </p>
+                  </div>
+                </div>
+                <CoverLetterButton cvText={cvText} jobDescription={jobDescription} />
+              </div>
+
               <div className="mt-8 text-center">
                 <button onClick={() => navigate('/')}
                   className="px-8 py-3 rounded-xl font-semibold"
@@ -192,7 +215,6 @@ export default function Results() {
         transition={{ delay: 0.8, type: 'spring', stiffness: 300, damping: 20 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.97 }}>
-        {/* Pulse ring */}
         <span className="absolute inset-0 rounded-full animate-ping opacity-30"
           style={{ background: 'linear-gradient(135deg, #3B82F6, #06B6D4)' }} />
         <Mic size={16} />
