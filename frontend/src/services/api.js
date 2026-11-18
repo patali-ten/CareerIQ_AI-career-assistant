@@ -1,8 +1,10 @@
 import axios from 'axios'
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
-  timeout: 90000, // 90 seconds - AI chains can take slightly longer under load
+  baseURL: BASE_URL,
+  timeout: 90000,
 })
 
 // ── Session storage helpers ──────────────────────────────────────────────────
@@ -17,7 +19,7 @@ export const getSession = () => ({
   jobDescription: sessionStorage.getItem('job_description') || '',
 })
 
-// ── Existing endpoints ────────────────────────────────────────────────────────
+// ── CV Upload ────────────────────────────────────────────────────────────────
 
 export const uploadCV = async (file) => {
   try {
@@ -33,6 +35,8 @@ export const uploadCV = async (file) => {
   }
 }
 
+// ── Career Analysis ──────────────────────────────────────────────────────────
+
 export const analyzeCareer = async (cvText, jobDescription) => {
   try {
     const response = await api.post('/crew-analyze', {
@@ -40,7 +44,7 @@ export const analyzeCareer = async (cvText, jobDescription) => {
       job_description: jobDescription
     }, {
       headers: { 'Content-Type': 'application/json' },
-      timeout: 300000, // 5 minutes — 6 sequential CrewAI agents can take a while
+      timeout: 300000,
     })
     return response.data
   } catch (error) {
@@ -53,24 +57,24 @@ export const analyzeCareer = async (cvText, jobDescription) => {
   }
 }
 
+// ── Cover Letter ─────────────────────────────────────────────────────────────
+
 export const generateCoverLetter = async (cvText, jobDescription) => {
-  const response = await fetch("http://localhost:8000/generate-cover-letter", {
+  const response = await fetch(`${BASE_URL}/generate-cover-letter`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ cv_text: cvText, job_description: jobDescription }),
-  });
+  })
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to generate cover letter");
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.detail || "Failed to generate cover letter")
   }
 
-  // Returns a PDF blob
-  const blob = await response.blob();
-  return blob;
-};
+  return response.blob()
+}
 
-// ── Crew endpoints ────────────────────────────────────────────────────────────
+// ── Crew Analysis ────────────────────────────────────────────────────────────
 
 export const crewAnalyze = async (cvText, jobDescription) => {
   try {
@@ -79,7 +83,7 @@ export const crewAnalyze = async (cvText, jobDescription) => {
       job_description: jobDescription
     }, {
       headers: { 'Content-Type': 'application/json' },
-      timeout: 300000, // 5 minutes — 6 sequential agents can take a while
+      timeout: 300000,
     })
     return response.data
   } catch (error) {
@@ -88,7 +92,7 @@ export const crewAnalyze = async (cvText, jobDescription) => {
   }
 }
 
-// ── Interview endpoints ───────────────────────────────────────────────────────
+// ── Interview ────────────────────────────────────────────────────────────────
 
 export const startInterview = async (cvText, jobDescription) => {
   try {
