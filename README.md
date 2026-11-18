@@ -17,6 +17,8 @@ mock interview coach.
 - **Resource Recommendations** — ChromaDB RAG retrieves curated courses per skill gap
 - **Voice Interview Coach** — 5 tailored mock interview questions with spoken feedback, 
   mic input, and mute/replay voice controls
+- **Cover Letter Generator** — AI-generated, job-tailored cover letter exported as a 
+  professionally formatted PDF with your name, contact details auto-extracted from your CV
 
 ## Tech Stack
 
@@ -43,6 +45,7 @@ mock interview coach.
 | Career Advisor | Generates positioning statement and career advice |
 | Learning Path Agent | Builds week-by-week learning roadmap |
 | Interview Coach | Generates tailored questions and evaluates answers |
+| Cover Letter Generator | Writes a tailored cover letter and exports it as a styled PDF |
 
 ## Getting Started
 
@@ -97,6 +100,12 @@ App runs at `http://localhost:5173`
 4. Review your match score, skill gaps, resume feedback, and career advice across tabs
 5. Click **Practice Interview** to enter the voice-enabled mock interview session
 6. Speak or type your answers — get instant scored feedback with voice playback
+
+## Cover Letter
+
+After analysis completes, go to the **Overview** tab and click **Download Cover Letter PDF**.  
+The AI reads your CV and the job description, writes a 3-paragraph tailored cover letter, 
+and exports it as a formatted PDF with your name and contact details extracted automatically.
 
 ## Voice Interview Features
 
