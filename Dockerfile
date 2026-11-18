@@ -14,5 +14,5 @@ COPY . .
 CMD python scripts/seed_vectorstore.py && \
     uvicorn backend.main:app \
       --host 0.0.0.0 \
-      --port ${PORT:-8000} \
+      --port ${PORT:-7860} \
       --workers 1
