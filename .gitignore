@@ -1,6 +1,4 @@
 .env
-frontend/.env.local
-frontend/.env*.local
 venv/
 chroma_db/
 __pycache__/

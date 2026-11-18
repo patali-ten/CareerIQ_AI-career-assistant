@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api import health, upload
@@ -11,21 +10,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS origins — add your Vercel URL here after frontend is deployed
-ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
-
-# Read additional allowed origins from environment variable
-# Format: comma-separated URLs, e.g. "https://careeriq.vercel.app,https://www.careeriq.vercel.app"
-extra_origins = os.getenv("ALLOWED_ORIGINS", "")
-if extra_origins:
-    ALLOWED_ORIGINS.extend([o.strip() for o in extra_origins.split(",") if o.strip()])
-
+# Allow React frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["http://localhost:5173"],  # Vite React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
